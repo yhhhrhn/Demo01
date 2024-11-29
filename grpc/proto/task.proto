@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package poker;
+option go_package = "proto/grpc";
+
+message TaskRequest {
+   string id = 1;
+
+}
+
+message TaskResponse {
+  string id = 1;
+  string description = 2;
+  string status = 3;
+}
+
+service Task {
+  rpc GetTask(TaskRequest) returns (TaskResponse);
+}

@@ -26,7 +26,7 @@ func UnLock(uuid string) bool {
 
 	if val == uuid {
 		//釋放鎖
-		reslut, _ := rdb.Del(ctx, taskKey).Result()
+		reslut, _ := rdb.Del(ctx, taskKey+uuid).Result()
 		if reslut == 1 {
 			return true
 		} else {

@@ -7,9 +7,7 @@ import (
 	_ "awesomeProject/utils"
 	"fmt"
 	"github.com/fasthttp/router"
-
 	"github.com/valyala/fasthttp"
-	_ "github.com/valyala/fasthttp"
 	"log"
 )
 
@@ -23,9 +21,8 @@ func main() {
 
 	fmt.Println("Web Server is Running")
 	cron.InitCron()
-	gRpc.InitGrpc()
-	//go service.Task1()
-	//go service.Task2()
+	go gRpc.InitGrpc()
+
 	log.Fatal(fasthttp.ListenAndServe(":9299", router.Handler))
 
 }

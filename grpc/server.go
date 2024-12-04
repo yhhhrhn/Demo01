@@ -22,7 +22,7 @@ type server struct {
 
 func (s *server) GetTask(ctx context.Context, req *pb.TaskRequest) (*pb.TaskResponse, error) {
 	//res, err := poker.PokerEvaluator(req.Hand, req.River)
-	fmt.Println(req.GetId())
+	//fmt.Println(req.GetId())
 	var task = service.GetTaskById(req.GetId())
 	return &pb.TaskResponse{
 		Id:          task.Id,

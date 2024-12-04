@@ -1,42 +1,43 @@
 package utils
 
 import (
-	"database/sql"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"time"
+	"github.com/jinzhu/gorm"
 )
 
 const (
-	UserName     string = "root"
-	Password     string = "1qaz@WSX"
-	Addr         string = "localhost"
-	Port         int    = 3306
-	Database     string = "app_store_crawler"
-	MaxLifetime  int    = 10
-	MaxOpenConns int    = 10
-	MaxIdleConns int    = 10
+//UserName     string = "root"
+//Password     string = "1qaz@WSX"
+//Addr         string = "localhost"
+//Port         int    = 3306
+//Database     string = "app_store_crawler"
+//MaxLifetime  int    = 10
+//MaxOpenConns int    = 10
+//MaxIdleConns int    = 10
+
 )
 
-var db *sql.DB
+var (
+	db            *gorm.DB
+	sqlConnection = "root:1qaz@WSX@tcp(127.0.0.1:3306)/app_store_crawler"
+)
+
+//var db *sql.DB
 
 func init() {
 
-	conn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", UserName, Password, Addr, Port, Database)
-	//連接MySQL
-	mysql, err := sql.Open("mysql", conn)
+	//開啟資料庫連接
+	var err error
+	db, err = gorm.Open("mysql", sqlConnection)
 	if err != nil {
-		fmt.Println("connection to mysql failed:", err)
-		return
+		panic("failed to connect database")
 	}
 
-	mysql.SetConnMaxLifetime(time.Duration(MaxLifetime) * time.Second)
-	mysql.SetMaxOpenConns(MaxOpenConns)
-	mysql.SetMaxIdleConns(MaxIdleConns)
-	db = mysql
-	fmt.Println("Mysql 已連線")
-	//db.Exec("insert into task_detail(id,description,status) values (?,?,?)", 12345678, "測試任務", "Pending")
+	//自動建立
+	//db.AutoMigrate(&GormUser{})
+
 }
-func GetMysqlDB() *sql.DB {
+
+func GetMysqlDB() *gorm.DB {
 	return db
 }

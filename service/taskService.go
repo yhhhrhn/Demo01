@@ -40,7 +40,7 @@ func GetTaskById(id string) entity.TaskDetail {
 	}
 	return taskDetail
 }
-func GetTask(ctx *fasthttp.RequestCtx) string {
+func GetTask(ctx *fasthttp.RequestCtx) {
 	//fmt.Println("getTask")
 	var task entity.TaskDetail
 	var taskLog entity.TaskLog
@@ -48,7 +48,7 @@ func GetTask(ctx *fasthttp.RequestCtx) string {
 	id := ctx.UserValue("id")
 	//if id != nil {
 	mysql := utils.GetMysqlDB()
-	defer mysql.Close()
+	//defer mysql.Close()
 	mysql.Where("id = ?", id).Find(&task)
 	if task.Id != "" {
 		jsonData, _ := json.Marshal(task)
@@ -56,29 +56,36 @@ func GetTask(ctx *fasthttp.RequestCtx) string {
 		taskLog.Description = "查詢任務成功:" + task.Description
 		taskLog.DateTime = string(time.Now().Format("2006-01-02 15:04:05"))
 		mysql.Save(&taskLog)
-		return string(jsonData)
+		ctx.SetStatusCode(200)
+		ctx.WriteString(string(jsonData))
+
 	} else {
 		log.Println("查無此任務ID")
-		return string("查無此任務ID")
+		ctx.SetStatusCode(200)
+		ctx.WriteString("查無此任務ID")
 	}
 
-	return "查無此任務ID"
 }
 func ReciveTask(ctx *fasthttp.RequestCtx) {
 	uuidV4 := uuid.New().String()
 	jsonData := []byte(ctx.PostBody())
-	var task entity.TaskDetail
-	task.Id = uuidV4
-	task.Status = "Pending"
-	jsonErr := json.Unmarshal(jsonData, &task)
+	var taskDetail entity.TaskDetail
+	taskDetail.Id = uuidV4
+	taskDetail.Status = "Pending"
+	jsonErr := json.Unmarshal(jsonData, &taskDetail)
 	if jsonErr != nil {
 		fmt.Fprintf(ctx, jsonErr.Error())
 		//fmt.Fprintf(ctx, "200")
-		return
+		//return
+		ctx.WriteString(jsonErr.Error())
+		ctx.SetStatusCode(400)
 	}
-	log.Println("任務內容:", task, "寫進隊列")
-	entity.TaskChan <- task
-	fmt.Fprintf(ctx, "200")
+	log.Println("任務內容:", taskDetail, "寫進隊列")
+
+	entity.TaskChan <- taskDetail
+	ctx.WriteString("任務內容:" + taskDetail.Description + " 寫進隊列")
+	ctx.SetStatusCode(200)
+	//fmt.Fprintf(ctx, "200")
 }
 
 func AddTask(taskDetail entity.TaskDetail) {
@@ -89,6 +96,7 @@ func AddTask(taskDetail entity.TaskDetail) {
 		taskDetail.DateTime = string(time.Now().Format("2006-01-02 15:04:05"))
 		var taskLog entity.TaskLog
 		mysql := utils.GetMysqlDB()
+		//defer mysql.Close()
 		mysql.Save(&taskDetail)
 
 		taskLog.Description = "Worker完成任務" + taskDetail.Description

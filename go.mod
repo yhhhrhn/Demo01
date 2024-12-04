@@ -12,6 +12,7 @@ require (
 	github.com/valyala/fasthttp v1.57.0
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.2
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

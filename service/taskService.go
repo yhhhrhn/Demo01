@@ -5,15 +5,15 @@ import (
 	"awesomeProject/utils"
 	"encoding/json"
 	"fmt"
+	"github.com/EDDYCJY/gsema"
 	"github.com/google/uuid"
 	"github.com/valyala/fasthttp"
 	"log"
-	"runtime"
-	"sync"
 	"time"
 )
 
-var GOMAXPROCS int = 2
+// 控制最大併發數量
+var sema = gsema.NewSemaphore(5)
 
 func GetTaskById(id string) entity.TaskDetail {
 
@@ -90,15 +90,14 @@ func ReciveTask(ctx *fasthttp.RequestCtx) {
 
 func AddTask(taskDetail entity.TaskDetail) {
 	//檢查鎖
+	mysql := utils.GetMysqlDB()
+	var taskLog entity.TaskLog
 	if GetLock(taskDetail.Id) {
-		//golangDateTime := time.Now().Format("2006-01-02 15:04:05")
+
 		taskDetail.Status = "Completed"
 		taskDetail.DateTime = string(time.Now().Format("2006-01-02 15:04:05"))
-		var taskLog entity.TaskLog
-		mysql := utils.GetMysqlDB()
-		//defer mysql.Close()
-		mysql.Save(&taskDetail)
 
+		mysql.Save(&taskDetail)
 		taskLog.Description = "Worker完成任務" + taskDetail.Description
 		taskLog.DateTime = taskDetail.DateTime
 		//記錄執行任務
@@ -110,6 +109,9 @@ func AddTask(taskDetail entity.TaskDetail) {
 
 	} else {
 		///獲取鎖失敗就break
+		taskLog.Description = "Worker獲取鎖失敗" + taskDetail.Description
+		taskLog.DateTime = taskDetail.DateTime
+		mysql.Save(&taskLog)
 		log.Println("Worker獲取鎖失敗break:", taskDetail)
 
 	}
@@ -118,22 +120,25 @@ func AddTask(taskDetail entity.TaskDetail) {
 }
 
 func TaskScheduler() {
-	var wg sync.WaitGroup
-	//限制併發量
-	runtime.GOMAXPROCS(GOMAXPROCS)
+
 	for i := range entity.TaskChan {
 		log.Println("TaskScheduler取出隊列:", i)
-		wg.Add(1)
-		go taskWorker(i, &wg)
+		//wg.Add(1)
+		go taskWorker(i)
+		if len(entity.TaskChan) == 0 {
+			break
+		}
 	}
-	wg.Wait()
-	fmt.Println("所有任務執行完成")
+	sema.Wait()
+	log.Println("所有任務放入Worker成功")
 
 }
 
-func taskWorker(task entity.TaskDetail, wg *sync.WaitGroup) {
-	defer wg.Done()
+func taskWorker(task entity.TaskDetail) {
+	defer sema.Done()
+	sema.Add(1)
 	log.Println("Worker取得任務:", task)
+	time.Sleep(time.Second * 10)
 	AddTask(task)
 
 }

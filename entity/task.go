@@ -20,3 +20,5 @@ func (TaskLog) TableName() string {
 }
 
 var TaskChan chan TaskDetail = make(chan TaskDetail, 1000)
+
+//var TaskSlice []TaskDetail

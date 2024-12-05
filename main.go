@@ -5,7 +5,6 @@ import (
 	"awesomeProject/cron"
 	gRpc "awesomeProject/grpc"
 	_ "awesomeProject/utils"
-	"fmt"
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 	"log"
@@ -19,7 +18,7 @@ func main() {
 
 	router.POST("/tasks", controller.PostTask)
 
-	fmt.Println("Web Server is Running")
+	log.Println("Web Server is Running listening port 9299")
 	cron.InitCron()
 	go gRpc.InitGrpc()
 

@@ -3,6 +3,7 @@ module awesomeProject
 go 1.23.3
 
 require (
+	github.com/EDDYCJY/gsema v0.0.0-20190120044130-7f6a61b75219
 	github.com/fasthttp/router v1.5.2
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/go-sql-driver/mysql v1.8.1
